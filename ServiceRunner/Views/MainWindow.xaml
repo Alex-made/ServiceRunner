@@ -1,0 +1,64 @@
+﻿<Window
+    x:Class="ServiceRunner.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:local="clr-namespace:ServiceRunner"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="clr-namespace:ServiceRunner.ViewModels"
+    Title="MainWindow"
+    Width="800"
+    Height="450"
+    d:DataContext="{d:DesignInstance Type=viewmodels:MainWindowViewModel}"
+    mc:Ignorable="d">
+
+    <Window.Resources>
+        <local:StatusToImageConverter x:Key="StatusToImage" />
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="591*" />
+            <ColumnDefinition Width="209*" />
+        </Grid.ColumnDefinitions>
+
+        <DataGrid
+            Name="ServicesList"
+            Grid.Column="0"
+            AutoGenerateColumns="False"
+            ItemsSource="{Binding Path=Services}"
+            SelectedItem="{Binding Path=SelectedService}">
+
+            <!--<i:Interaction.Triggers>
+                <i:EventTrigger EventName="SelectionChanged">
+                    <i:InvokeCommandAction Command="{Binding AddToSelectedServicesCommand}" CommandParameter="{Binding SelectedService}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>-->
+
+            <DataGrid.Columns>
+                <DataGridTextColumn
+                    Binding="{Binding Path=Version}"
+                    Header="Версия сервиса"
+                    IsReadOnly="True" />
+                <DataGridTemplateColumn Header="Статус">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Image
+                                Width="20"
+                                Height="20"
+                                Source="{Binding Path=Status, Converter={StaticResource StatusToImage}}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Button
+            Grid.Column="1"
+            Margin="30,29,30,337"
+            Command="{Binding RunServicesCommand}"
+            CommandParameter="{Binding ElementName=ServicesList, Path=SelectedItems}"
+            Content="Run selected" />
+    </Grid>
+</Window>
