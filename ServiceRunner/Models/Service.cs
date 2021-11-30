@@ -25,7 +25,6 @@ namespace ServiceRunner.Models
 		public ServiceError Error
 		{
 			get;
-			set;
 		}
 
 		//TODO выпилить. не нужен.

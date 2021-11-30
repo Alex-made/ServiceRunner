@@ -1,13 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using ServiceRunner.Models;
+using ServiceRunner.Services;
 
 namespace ServiceRunner
 {
-	public class ServiceRepositoryExtension
+	/// <summary>
+	/// Представляет расширение для <see cref="ServicesRepository"/>.
+	/// </summary>
+	public static class ServiceRepositoryExtension
 	{
-		public I
+		#region Public
+		/// <summary>
+		/// Возвращает коллекция сервисов типа <see cref="ObservableCollection{T}"/>.
+		/// </summary>
+		/// <param name="services">Коллекция сервисов.</param>
+		public static ObservableCollection<Service> GetServiceObservableCollection(this IServicesRepository repository, IList<Service> services) =>
+			new ObservableCollection<Service>(services);
+		#endregion
 	}
 }
