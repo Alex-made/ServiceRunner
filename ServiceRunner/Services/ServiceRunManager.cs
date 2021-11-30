@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using ServiceRunner.Models;
 
 namespace ServiceRunner.Services
@@ -15,34 +17,88 @@ namespace ServiceRunner.Services
 		public IList<Service> RunServices(IList<Service> services)
 		{
 			//пробегаемся по коллекции сервисов
+			IterateWithActions(services,
+							   service =>
+							   {
+								   //если сервис запущен, то добавляем запись в том, что он запущен в свойство Error сервиса и не трогаем его.
+								   service.SetError("Сервис уже запущен");
+							   },
+							   service =>
+							   {
+								   //если сервис не запущен, то для него создать процесс и запустить этот процесс. Изменить статус этого сервиса на running.
+								   var proc = new Process();
+								   proc.StartInfo.WorkingDirectory = service.WorkingDirectory;
+								   proc.StartInfo.FileName = service.AbsoluteFileName;
+								   if (proc.Start())
+								   {
+									   service.Status = ServiceStatuses.Running;
+								   }
+								   //подписываемся на событие выхода процесса из работы. Работает только, если вызвать .Kill процесса из интерфейса, а не вручную закрыть окно.
+								   proc.Exited += ProcessExitedEventHandler;
+							   });
+			//по окончании цикла вернуть коллекцию запущенных сервисов: с пустым Error для безошибочно запущенных сервисов, список не запущенных сервисов (ошибки запуска добавлены в свойство типа Error и в лог)
+			return services;
+		}
+
+		/// <summary>
+		/// Останавливает сервисы.
+		/// </summary>
+		/// <param name="services">Коллекция сервисов, которые необходимо остановить.</param>
+		/// <returns>Коллекцию, содержащую успешно и не успешно остановленные сервисы.</returns>
+		/// TODO возможно, не нужно ничего возвращать
+		public IList<Service> StopServices(IList<Service> services)
+		{
+			//пробегаемся по коллекции сервисов
+			IterateWithActions(services,
+							   service =>
+							   {
+								   //если сервис запущен, то получить процесс и остановить его
+								   var processes = Process.GetProcessesByName(Service.GetNameWithoutExtension(service.AbsoluteFileName));
+								   if (processes.Any())
+								   {
+									   try
+									   {
+										   foreach (var process in processes)
+										   {
+											   process.Kill();
+										   }
+									   }
+									   catch (Exception e)
+									   {
+										   service.SetError("При остановке сервиса возникла ошибка: " + e.Message);
+									   }
+
+									   service.Status = ServiceStatuses.Stopped;
+								   }
+							   },
+							   service =>
+							   {
+								   //если сервис не запущен, то для него создать ошибку остановки и не трогать статус
+								   service.SetError("Сервис уже остановлен");
+							   });
+			return services;
+		}
+
+		/// <summary>
+		/// Выполняет действия на коллекции сервисов в зависимости от статуса сервиса.
+		/// </summary>
+		/// <param name="services">Коллекция сервисов.</param>
+		/// <param name="onRunningAction">Действие, выполняющееся, если статус сервиса "Запущен".</param>
+		/// <param name="onStoppingAction">Действие, выполняющееся, если статус сервиса "Остановлен".</param>
+		private void IterateWithActions(IList<Service> services, Action<Service> onRunningAction, Action<Service> onStoppingAction)
+		{
 			foreach (var service in services)
 			{
 				switch (service.Status)
 				{
-					//если сервис запущен, то добавляем запись в том, что он запущен в свойство Error сервиса и не трогаем его.
 					case ServiceStatuses.Running:
-						service.Error = new ServiceError
-						{
-							Description = "Сервис уже запущен"
-						};
+						onRunningAction.Invoke(service);
 						break;
-					//если сервис не запущен, то для него создать процесс и запустить этот процесс. Изменить статус этого сервиса на running.
 					case ServiceStatuses.Stopped:
-						var proc = new Process();
-						proc.StartInfo.WorkingDirectory = service.WorkingDirectory;
-						proc.StartInfo.FileName = service.AbsoluteFileName;
-						if (proc.Start())
-						{
-							service.Status = ServiceStatuses.Running;
-						}
-						//подписываемся на событие выхода процесса из работы. Работает только, если вызвать .Kill процесса из интерфейса, а не вручную закрыть окно.
-						proc.Exited += ProcessExitedEventHandler;
+						onStoppingAction.Invoke(service);
 						break;
 				}
 			}
-
-			//по окончании цикла вернуть коллекцию запущенных сервисов: с пустым Error для безошибочно запущенных сервисов, список не запущенных сервисов (ошибки запуска добавлены в свойство типа Error и в лог)
-			return services;
 		}
 
 		private static void ProcessExitedEventHandler(object? sender, EventArgs e)

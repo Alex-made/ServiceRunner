@@ -60,5 +60,15 @@
             Command="{Binding RunServicesCommand}"
             CommandParameter="{Binding ElementName=ServicesList, Path=SelectedItems}"
             Content="Run selected" />
+        <Button
+            Grid.Column="1"
+            Width="149"
+            Height="54"
+            Margin="0,130,0,0"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            Command="{Binding StopServicesCommand}"
+            CommandParameter="{Binding ElementName=ServicesList, Path=SelectedItems}"
+            Content="Stop selected" />
     </Grid>
 </Window>

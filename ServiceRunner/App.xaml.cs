@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using Prism.Ioc;
 using Prism.Unity;
+using ServiceRunner.Models;
 using ServiceRunner.Services;
 using ServiceRunner.Views;
 
@@ -15,6 +16,7 @@ namespace ServiceRunner
 		{
 			containerRegistry.Register<IServiceRunManager, ServiceRunManager>();
 			containerRegistry.Register<IServicesRepository, ServicesRepository>();
+			containerRegistry.RegisterInstance(new RepeaterService());
 		}
 
 		/// <summary>Creates the shell or main window of the application.</summary>

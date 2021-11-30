@@ -16,6 +16,7 @@ namespace ServiceRunner.Services
 		{
 			//TODO первая версия. будет захардкожен путь до папки с прогами. В следующей версии сделать, чтобы можно было указать путь пользователю и запомнить настройки.
 			//настройки будем инжектить в этот сервис. через настройки будем брать путь к файлам. можно сделать просто json настройки, а не пользовательские xml.
+			//лучше сделать кнопку "+", при которой будет OpenDialog и там добавлять нужную папку. Один раз добавил нужные папки, они отобразились в списке с чекбоксами. Далее, сервисы загружаем в список из папок, отмеяенных чекбоксами.
 
 			var availableServices = new List<Service>();
 
@@ -46,8 +47,8 @@ namespace ServiceRunner.Services
 			//получить имя из полного пути 
 			var serviceName = Service.GetNameWithoutExtension(exeFileFullPath);
 			var processes = Process.GetProcessesByName(serviceName);
-			
-			//если сервисы нашлись, значит они запущены.
+
+			//если процессы нашлись, значит они запущены.
 			if (processes.Any())
 			{
 				foreach (var process in processes)
